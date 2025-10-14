@@ -1,0 +1,44 @@
+# ============================
+#  BWDSB Organization Labels
+# ============================
+
+- name: bug
+  color: d73a4a
+  description: Something isn’t working
+
+- name: enhancement
+  color: a2eeef
+  description: New feature or request
+
+- name: documentation
+  color: 0075ca
+  description: Improvements or additions to documentation
+
+- name: refactor
+  color: c2e0c6
+  description: Code cleanup or structure improvements
+
+- name: requirement
+  color: 5319e7
+  description: Requirement or specification discussion
+
+- name: hotfix
+  color: ff0000
+  description: Critical fix for production issues
+
+- name: help wanted
+  color: 00cc66
+  description: Contributions or assistance requested
+
+- name: invalid
+  color: ffd700
+  description: Issue or PR is not valid or reproducible
+
+- name: question
+  color: 8a2be2
+  description: Further information or clarification
+  
+- name:  QA
+  color: 800080
+  description: QA
+
