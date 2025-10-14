@@ -1,0 +1,71 @@
+name: 📄 New Requirement
+description: Use this template to propose a new requirement
+title: "[Requirement]: "
+labels: ["requirement"]
+assignees:
+  - 
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## New Requirement Template
+
+        Use this form to document new business or technical requirements.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: Summary of the requirement.
+      placeholder: "E.g., Support multi-region deployment"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Full Description
+      description: Describe the requirement in full. What's the purpose, the need, and the context?
+      placeholder: |
+        The platform needs to be deployable in multiple cloud regions...
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: requirement-type
+    attributes:
+      label: Type of Requirement
+      options:
+        - label: Business Requirement
+        - label: Technical Requirement
+        - label: Compliance / Security
+        - label: Operational / Monitoring
+
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Rationale / Justification
+      description: Why is this needed? What is the business or technical benefit?
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: What are the conditions for this requirement to be considered fulfilled?
+      placeholder: |
+        - Must support deployment to AWS + Azure
+        - Can deploy via CI/CD pipeline
+        - No downtime during failover
+    validations:
+      required: false
+
+  - type: textarea
+    id: related
+    attributes:
+      label: Related Issues / Documents
+      description: Link to any related issues, PRs, RFCs, or external docs
+      placeholder: "#123, RFC-9, link-to-confluence-page"
+    validations:
+      required: false
