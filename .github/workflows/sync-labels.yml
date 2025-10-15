@@ -11,10 +11,10 @@ jobs:
   list-repos:
     runs-on: ubuntu-latest
     outputs:
-      repo-list: ${{ steps.get.outputs.repos }}
+      repos: ${{ steps.set.outputs.repos }}
     steps:
       - name: Get list of repos in organization
-        id: get
+        id: fetch
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.ORG_TOKEN }}
@@ -25,19 +25,27 @@ jobs:
               type: "all",
               per_page: 100
             });
-            const names = repos
+
+            const repoNames = repos
               .filter(r => !r.archived)
               .map(r => r.name);
-            core.setOutput("repos", names.join(","));
+
+            // Store in environment file
+            require('fs').writeFileSync(
+              process.env.GITHUB_OUTPUT,
+              `repos=${JSON.stringify(repoNames)}\n`
+            );
+        id: set
 
   sync-labels:
     needs: list-repos
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         repo: ${{ fromJson(needs.list-repos.outputs.repos) }}
     steps:
-      - name: Checkout (dummy)
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Sync labels in ${{ matrix.repo }}
@@ -47,5 +55,4 @@ jobs:
           yaml-file: .github/labels.yml
           skip-delete: true
         env:
-          # override GITHUB_REPOSITORY so the action runs against the target repo
-          GITHUB_REPOSITORY: ${{ github.repository_owner }}/{{ matrix.repo }}
+          GITHUB_REPOSITORY: ${{ github.repository_owner }}/${{ matrix.repo }}
