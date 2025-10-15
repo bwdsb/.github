@@ -8,15 +8,13 @@ permissions:
   issues: write
 
 jobs:
-  sync:
+  list-repos:
     runs-on: ubuntu-latest
-
+    outputs:
+      repo-list: ${{ steps.get.outputs.repos }}
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
       - name: Get list of repos in organization
-        id: repos
+        id: get
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.ORG_TOKEN }}
@@ -27,17 +25,27 @@ jobs:
               type: "all",
               per_page: 100
             });
+            const names = repos
+              .filter(r => !r.archived)
+              .map(r => r.name);
+            core.setOutput("repos", names.join(","));
 
-            const repoNames = repos
-              .filter(repo => !repo.archived)
-              .map(repo => `${org}/${repo.name}`);
+  sync-labels:
+    needs: list-repos
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        repo: ${{ fromJson(needs.list-repos.outputs.repos) }}
+    steps:
+      - name: Checkout (dummy)
+        uses: actions/checkout@v4
 
-            core.setOutput("result", repoNames.join(","));
-
-      - name: Sync labels across all repos
+      - name: Sync labels in ${{ matrix.repo }}
         uses: crazy-max/ghaction-github-labeler@v5
         with:
-          token: ${{ secrets.ORG_TOKEN }}
+          github-token: ${{ secrets.ORG_TOKEN }}
           yaml-file: .github/labels.yml
           skip-delete: true
-          repositories: ${{ steps.repos.outputs.result }}
+        env:
+          # override GITHUB_REPOSITORY so the action runs against the target repo
+          GITHUB_REPOSITORY: ${{ github.repository_owner }}/{{ matrix.repo }}
