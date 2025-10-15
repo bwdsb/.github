@@ -52,8 +52,8 @@ jobs:
           echo "Starting label sync process..."
 
           # Read the labels configuration
-          if [ ! -f "labels.yml" ]; then
-            echo "Error: labels.yml not found!"
+          if [ ! -f ".github/labels.yml" ]; then
+            echo "Error: .github/labels.yml not found!"
             exit 1
           fi
 
@@ -80,12 +80,12 @@ jobs:
             echo "======================================"
 
             # Read each label from the YAML file
-            label_count=$(yq eval '. | length' labels.yml)
+            label_count=$(yq eval '. | length' .github/labels.yml)
 
             for ((i=0; i<$label_count; i++)); do
-              name=$(yq eval ".[$i].name" labels.yml)
-              color=$(yq eval ".[$i].color" labels.yml)
-              description=$(yq eval ".[$i].description" labels.yml)
+              name=$(yq eval ".[$i].name" .github/labels.yml)
+              color=$(yq eval ".[$i].color" .github/labels.yml)
+              description=$(yq eval ".[$i].description" .github/labels.yml)
 
               # Remove quotes if present
               name=$(echo "$name" | tr -d '"')
@@ -136,4 +136,4 @@ jobs:
           echo "✅ Labels have been synced to all repositories" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Labels synced:**" >> $GITHUB_STEP_SUMMARY
-          yq eval '.[] | "- " + .name + " (" + .color + ")"' labels.yml >> $GITHUB_STEP_SUMMARY
+          yq eval '.[] | "- " + .name + " (" + .color + ")"' .github/labels.yml >> $GITHUB_STEP_SUMMARY
