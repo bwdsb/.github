@@ -12,7 +12,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
       - name: Get list of repos in organization
         id: repos
@@ -26,7 +27,12 @@ jobs:
               type: "all",
               per_page: 100
             });
-            return repos.map(r => r.name);
+
+            const repoNames = repos
+              .filter(repo => !repo.archived)
+              .map(repo => `${org}/${repo.name}`);
+
+            core.setOutput("result", repoNames.join(","));
 
       - name: Sync labels across all repos
         uses: crazy-max/ghaction-github-labeler@v5
