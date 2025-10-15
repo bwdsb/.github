@@ -33,4 +33,5 @@ jobs:
         with:
           token: ${{ secrets.ORG_TOKEN }}
           yaml-file: .github/labels.yml
+          skip-delete: true
           repositories: ${{ steps.repos.outputs.result }}
