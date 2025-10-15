@@ -126,7 +126,7 @@ jobs:
           echo "Failed: $FAIL_COUNT"
           echo "======================================"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.ORG_TOKEN }}
 
       - name: Create summary
         if: always()
