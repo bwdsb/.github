@@ -44,4 +44,5 @@
 
 - name: devOps
   color: 2790c8
+  description: devOps, CI/CD changes
 
