@@ -1,0 +1,109 @@
+name: Delete label from all repos
+
+on:
+  workflow_dispatch:
+    inputs:
+      label_name:
+        description: 'Name of the label to delete'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  delete-label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get all organization repositories
+        id: get-repos
+        run: |
+          GITHUB_ORG="${GITHUB_REPOSITORY_OWNER}"
+
+          echo "Fetching repositories for organization: $GITHUB_ORG"
+
+          repos=$(gh api --paginate "/orgs/$GITHUB_ORG/repos" --jq '.[].name')
+
+          if [ -z "$repos" ]; then
+            echo "No repositories found or this might be a user account."
+            repos=$(gh api --paginate "/user/repos" --jq '.[] | select(.owner.login == env.GITHUB_REPOSITORY_OWNER) | .name')
+          fi
+
+          echo "Found repositories:"
+          echo "$repos"
+
+          echo "repos<<EOF" >> $GITHUB_OUTPUT
+          echo "$repos" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.ORG_TOKEN }}
+
+      - name: Delete label from repositories
+        run: |
+          GITHUB_ORG="${GITHUB_REPOSITORY_OWNER}"
+          LABEL_NAME="${{ github.event.inputs.label_name }}"
+          REPO_COUNT=0
+          DELETED_COUNT=0
+          NOT_FOUND_COUNT=0
+          FAIL_COUNT=0
+
+          echo "Deleting label: '$LABEL_NAME' from all repositories..."
+
+          while IFS= read -r repo; do
+            if [ -z "$repo" ]; then
+              continue
+            fi
+
+            REPO_COUNT=$((REPO_COUNT + 1))
+            echo ""
+            echo "======================================"
+            echo "Processing repository: $repo"
+            echo "======================================"
+
+            if gh api "/repos/$GITHUB_ORG/$repo/labels/$LABEL_NAME" >/dev/null 2>&1; then
+              echo "  Label found, deleting..."
+              if gh api --method DELETE "/repos/$GITHUB_ORG/$repo/labels/$LABEL_NAME" 2>&1; then
+                DELETED_COUNT=$((DELETED_COUNT + 1))
+                echo "  ✓ Deleted label '$LABEL_NAME' from $repo"
+              else
+                FAIL_COUNT=$((FAIL_COUNT + 1))
+                echo "  ✗ Failed to delete label '$LABEL_NAME' from $repo"
+              fi
+            else
+              NOT_FOUND_COUNT=$((NOT_FOUND_COUNT + 1))
+              echo "  - Label '$LABEL_NAME' not found in $repo, skipping"
+            fi
+
+          done <<< "${{ steps.get-repos.outputs.repos }}"
+
+          echo ""
+          echo "======================================"
+          echo "Delete Label Summary"
+          echo "======================================"
+          echo "Total repositories processed: $REPO_COUNT"
+          echo "Deleted: $DELETED_COUNT"
+          echo "Not found (skipped): $NOT_FOUND_COUNT"
+          echo "Failed: $FAIL_COUNT"
+          echo "======================================"
+
+          echo "DELETED_COUNT=$DELETED_COUNT" >> $GITHUB_ENV
+          echo "NOT_FOUND_COUNT=$NOT_FOUND_COUNT" >> $GITHUB_ENV
+          echo "FAIL_COUNT=$FAIL_COUNT" >> $GITHUB_ENV
+          echo "REPO_COUNT=$REPO_COUNT" >> $GITHUB_ENV
+        env:
+          GH_TOKEN: ${{ secrets.ORG_TOKEN }}
+
+      - name: Create summary
+        if: always()
+        run: |
+          echo "## Delete Label Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Label deleted:** \`${{ github.event.inputs.label_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Status | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
+          echo "| Total repositories | $REPO_COUNT |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deleted | $DELETED_COUNT |" >> $GITHUB_STEP_SUMMARY
+          echo "| Not found (skipped) | $NOT_FOUND_COUNT |" >> $GITHUB_STEP_SUMMARY
+          echo "| Failed | $FAIL_COUNT |" >> $GITHUB_STEP_SUMMARY
