@@ -46,3 +46,10 @@
   color: 2790c8
   description: devOps, CI/CD changes
 
+- name: needs-requirements
+  color: F9D0C4
+  description: ideas or request but don't have clear specs 
+- name: school-year
+  color: 004A98
+  description: pre-school-year tasks 
+
